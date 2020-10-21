@@ -989,7 +989,7 @@ class Api(object):
         data = self.get_request(query_str)
         return data
 
-    def upload_file(self, identifier, filename, is_pid=True):
+    def upload_file(self, identifier, filename, is_pid=True, restrict=False):
         """Add file to a dataset.
 
         Add a file to an existing Dataset. Description and tags are optional:
@@ -1012,6 +1012,8 @@ class Api(object):
             Full filename with path.
         is_pid : bool
             ``True`` to use persistent identifier. ``False``, if not.
+        restrict : bool
+            ``True`` to restrict access to the file. ``False`` otherwise.
 
         Returns
         -------
@@ -1028,8 +1030,10 @@ class Api(object):
             query_str += '/datasets/{0}/add'.format(identifier)
         shell_command = 'curl -H "X-Dataverse-key: {0}"'.format(
             self.api_token)
-        shell_command += ' -X POST {0} -F file=@{1}'.format(
-            query_str, filename)
+        shell_command += ' -X POST -F file=@{0} '.format(filename)
+        if restrict:
+            shell_command += r' -F jsonData={"restrict":"true"} '
+        shell_command += query_str
         # TODO(Shell): is shell=True necessary?
         result = sp.run(shell_command, shell=True, stdout=sp.PIPE)
         resp = json.loads(result.stdout)
